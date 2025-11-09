@@ -1,7 +1,7 @@
 {
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/home/page": "app/home/page.js",
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js"
+  "/dive-management/page": "app/dive-management/page.js",
+  "/dive-management/second/[id]/page": "app/dive-management/second/[id]/page.js",
+  "/home/page": "app/home/page.js",
+  "/dive-management/first/[id]/page": "app/dive-management/first/[id]/page.js"
 }

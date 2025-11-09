@@ -36,33 +36,6 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
 }
 
 
-// Validate ../../src/app/ai-gemini/prompt/page.tsx
-{
-  type __IsExpected<Specific extends AppPageConfig<"/ai-gemini/prompt">> = Specific
-  const handler = {} as typeof import("../../src/app/ai-gemini/prompt/page.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
-// Validate ../../src/app/ai-gemini/vision/page.tsx
-{
-  type __IsExpected<Specific extends AppPageConfig<"/ai-gemini/vision">> = Specific
-  const handler = {} as typeof import("../../src/app/ai-gemini/vision/page.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
-// Validate ../../src/app/home/page.tsx
-{
-  type __IsExpected<Specific extends AppPageConfig<"/home">> = Specific
-  const handler = {} as typeof import("../../src/app/home/page.js")
-  type __Check = __IsExpected<typeof handler>
-  // @ts-ignore
-  type __Unused = __Check
-}
-
 // Validate ../../src/app/image-upload-test/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/image-upload-test">> = Specific

@@ -1,43 +1,29 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-
-    // JS 코드도 허용 → 급하면 js 그대로 써도 됨
     "allowJs": true,
-
-    // 타입 검사는 느슨하게 → 외부 라이브러리 에러 무시
     "skipLibCheck": true,
-    "strict": false, // 엄격 모드 해제 (빠른 개발용)
-    "noUnusedLocals": false, // 안 쓰는 변수 경고 X
-    "noUnusedParameters": false, // 안 쓰는 파라미터 경고 X
+    "strict": true,
     "noEmit": true,
-
-    // 모듈/리졸브
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-
-    // 빌드 캐시 → 속도 ↑
     "incremental": true,
-
-    "plugins": [{ "name": "next" }],
-
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "baseUrl": ".", // ⬅ 추가
+    "paths": { "@/*": ["./src/*"] },
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "src/components/PortOneDemoButton.ㅓsx",
-    "src/lib/portone.js",
-    "public/firebase-messaging-sw.js"
+    "**/*.js", // ⬅ 추가
+    "**/*.jsx", // ⬅ 추가
+    ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

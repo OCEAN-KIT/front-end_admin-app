@@ -1,4 +1,4 @@
-// File: /Users/aryu/Documents/ocean/src/app/home/page.tsx
+// File: /Users/aryu/Documents/ocean/src/app/home/page.jsx
 import * as entry from '../../../../src/app/home/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
