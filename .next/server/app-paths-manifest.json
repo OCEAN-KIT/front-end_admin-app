@@ -1,8 +1,4 @@
 {
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/home/page": "app/home/page.js",
-  "/submit-management/page": "app/submit-management/page.js",
+  "/page": "app/page.js",
   "/login/page": "app/login/page.js"
 }

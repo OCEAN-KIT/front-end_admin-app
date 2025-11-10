@@ -1,19 +1,62 @@
-// app/(auth)/login/page.tsx  (경로는 너 프로젝트에 맞게)
+// app/(auth)/login/page.tsx
 "use client";
 
 import { logIn } from "@/api/auth";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { ClipLoader } from "react-spinners"; // ⬅️ 추가
+import { ClipLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function LoginPage() {
   const { checking, isLoggedIn } = useAuthGuard({ mode: "gotoHome" });
 
   const router = useRouter();
+
+  // ✅ demo 모드 여부: URL ?demo=1 일 때만 동작 (배포 상태에서도 안전)
+  const demoMode = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get("demo") === "1";
+  }, []);
+
+  // ✅ 자동 로그인까지 원하면 ?autologin=1 추가
+  const autoLogin = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    return sp.get("autologin") === "1";
+  }, []);
+
+  // ✅ 초기 폼 상태
   const [form, setForm] = useState({ id: "", password: "" });
   const [errorMsg, setErrorMsg] = useState<string>("");
-  const [sending, setSending] = useState(false); // ⬅️ 추가
+  const [sending, setSending] = useState(false);
+
+  // ✅ 마운트 이후에만 데모 크리덴셜 주입 (SSR 흔들림 방지)
+  useEffect(() => {
+    if (demoMode) {
+      setForm({ id: "admin@admin.com", password: "password" });
+    }
+  }, [demoMode]);
+
+  // ✅ 데모 & 자동로그인 플래그가 있으면 바로 로그인 시도
+  useEffect(() => {
+    const doAuto = async () => {
+      if (!demoMode || !autoLogin) return;
+      try {
+        setErrorMsg("");
+        setSending(true);
+        await logIn("admin@admin.com", "password");
+        router.push("/home");
+      } catch (err) {
+        console.error("자동 로그인 에러:", err);
+        setErrorMsg("자동 로그인 중 오류가 발생했습니다.");
+      } finally {
+        setSending(false);
+      }
+    };
+    doAuto();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoMode, autoLogin]);
 
   if (checking || isLoggedIn) return null;
 
@@ -25,14 +68,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       setErrorMsg("");
-      setSending(true); // ⬅️ 추가
+      setSending(true);
       await logIn(form.id, form.password);
       router.push("/home");
     } catch (err) {
       console.error("로그인 에러:", err);
       setErrorMsg("로그인 중 오류가 발생했습니다.");
     } finally {
-      setSending(false); // ⬅️ 추가
+      setSending(false);
     }
   };
 
@@ -61,9 +104,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* 아이디 */}
           <div className="space-y-2">
             <label className="block text-[13px] font-semibold text-gray-700">
               아이디
@@ -74,6 +115,7 @@ export default function LoginPage() {
               value={form.id}
               onChange={handleChange}
               placeholder="아이디를 입력하세요"
+              autoComplete="username" // ✅ 브라우저 자동완성 힌트
               className="
                 h-12 w-full rounded-2xl
                 border-0 ring-1 ring-gray-200
@@ -84,7 +126,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* 비밀번호 */}
           <div className="space-y-2">
             <label className="block text-[13px] font-semibold text-gray-700">
               비밀번호
@@ -95,6 +136,7 @@ export default function LoginPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="비밀번호를 입력하세요"
+              autoComplete="current-password" // ✅ 브라우저 자동완성 힌트
               className="
                 h-12 w-full rounded-2xl
                 border-0 ring-1 ring-gray-200
@@ -105,7 +147,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* 로그인 CTA */}
           <button
             type="submit"
             disabled={sending}
@@ -126,7 +167,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* 회원가입 링크 */}
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push("/register")}
