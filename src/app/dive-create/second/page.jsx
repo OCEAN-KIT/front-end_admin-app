@@ -1,10 +1,19 @@
 // app/dive-create/second/page.jsx
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadImage } from "@/api/upload-image";
 import { createSubmission } from "@/api/submissions";
+import {
+  ChevronLeft,
+  ClipboardList,
+  TriangleAlert,
+  Images,
+  Plus,
+  Trash2,
+  Check,
+} from "lucide-react";
 
 const DEBUG = true;
 const TEST_NO_ATTACH = false;
@@ -54,7 +63,15 @@ function labelToActivityType(label) {
 export default function DiveCreateStep2Page() {
   const router = useRouter();
 
-  // 활동 유형 선택(서버 enum 대응)
+  // 활동 유형 (세그먼트 버튼)
+  const WORK_TYPES = [
+    "이식",
+    "폐기물 수거",
+    "성게 제거",
+    "연구",
+    "모니터링",
+    "기타",
+  ];
   const [workType, setWorkType] = useState("이식");
 
   // 내용/사건
@@ -63,9 +80,21 @@ export default function DiveCreateStep2Page() {
   const DETAILS_MAX = 2000;
   const INCIDENT_MAX = 2000;
 
-  // 첨부
+  // 첨부 (최대 10)
   const [attachments, setAttachments] = useState([]);
   const fileRef = useRef(null);
+
+  const inputCls =
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none text-gray-800 placeholder:text-gray-400 focus:ring-4 focus:ring-sky-100 focus:border-sky-300 transition";
+  const cardCls =
+    "rounded-2xl border border-gray-200 bg-white/90 backdrop-blur p-4";
+  const labelCls = "text-[13px] text-gray-500 mb-1.5";
+
+  const toHHMMSS = (t) => {
+    if (!t) return "00:00:00";
+    const pad2 = (x) => String(Number(x) || 0).padStart(2, "0");
+    return `${pad2(t.hour)}:${pad2(t.minute)}:${pad2(t.second)}`;
+  };
 
   const onPickFiles = (e) => {
     const files = Array.from(e.target.files || []);
@@ -76,11 +105,10 @@ export default function DiveCreateStep2Page() {
   const removeOne = (idx) =>
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
 
-  const toHHMMSS = (t) => {
-    if (!t) return "00:00:00";
-    const pad = (n, len = 2) => String(Number(n) || 0).padStart(len, "0");
-    return `${pad(t.hour)}:${pad(t.minute)}:${pad(t.second)}`;
-  };
+  const canSubmit = useMemo(() => {
+    // 최소 제출 가드: 내용/사건/첨부 중 하나는 있어야 함
+    return Boolean(details.trim() || incidentText.trim() || attachments.length);
+  }, [details, incidentText, attachments.length]);
 
   async function handleSubmit() {
     try {
@@ -126,8 +154,8 @@ export default function DiveCreateStep2Page() {
         longitude: n(d.longitude),
         basicEnv: {
           recordDate: d.recordDate ?? new Date().toISOString().slice(0, 10),
-          startTime: toHHMMSS(d.startTime), // "HH:mm:ss"
-          endTime: toHHMMSS(d.endTime ?? d.startTime), // "HH:mm:ss"
+          startTime: toHHMMSS(d.startTime),
+          endTime: toHHMMSS(d.endTime ?? d.startTime),
           waterTempC: n(d.waterTempC),
           visibilityM: n(d.visibilityM),
           depthM: n(d.depthM),
@@ -154,7 +182,7 @@ export default function DiveCreateStep2Page() {
       const res = await createSubmission(payload);
       console.log("[submit] response =", res);
       alert("제출 완료!");
-      router.replace("/");
+      router.replace("/home");
     } catch (err) {
       const status = err?.response?.status;
       const data = err?.response?.data;
@@ -169,59 +197,98 @@ export default function DiveCreateStep2Page() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto w-[380px] px-4 py-5">
-        {/* 작업 유형 */}
-        <div>
-          <div className="text-[15px] font-semibold text-gray-800 mb-2">
-            작업 유형
-          </div>
-          <div className="relative">
-            <select
-              className="w-full appearance-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[16px] shadow-sm"
-              value={workType}
-              onChange={(e) => setWorkType(e.target.value)}
-            >
-              <option>이식</option>
-              <option>폐기물 수거</option>
-              <option>성게 제거</option>
-              <option>연구</option>
-              <option>모니터링</option>
-              <option>기타</option>
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-              ▾
-            </span>
-          </div>
+    <div className="min-h-[100dvh] bg-gradient-to-b from-gray-50 to-white">
+      {/* 상단 헤더 */}
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-100">
+        <div className="mx-auto max-w-[420px] px-4 h-14 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-xl p-1.5 hover:bg-gray-100 active:scale-[0.98] transition"
+            aria-label="뒤로가기"
+          >
+            <ChevronLeft className="h-5 w-5 text-gray-700" />
+          </button>
+          <h1 className="text-[16px] font-semibold tracking-tight">
+            활동 제출
+          </h1>
         </div>
+      </header>
+
+      {/* 본문 */}
+      <main className="mx-auto max-w-[420px] px-4 pt-4 pb-32 space-y-4">
+        {/* 작업 유형 */}
+        <section className={cardCls}>
+          <div className="flex items-center gap-2 mb-2">
+            <ClipboardList className="h-4 w-4 text-sky-600" />
+            <h2 className="text-[14px] font-semibold text-gray-800">
+              작업 유형
+            </h2>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {WORK_TYPES.map((opt) => {
+              const active = workType === opt;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setWorkType(opt)}
+                  className={[
+                    "h-10 rounded-xl text-[13px] font-semibold transition",
+                    active
+                      ? "bg-white border border-sky-200 text-sky-700 ring-2 ring-sky-100"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                  ].join(" ")}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {/* 작업 내용 */}
-        <div className="mt-6">
-          <div className="text-[15px] font-semibold text-gray-800 mb-2">
-            작업 내용
+        <section className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-sky-600" />
+              <h2 className="text-[14px] font-semibold text-gray-800">
+                작업 내용
+              </h2>
+            </div>
+            <span className="text-[12px] text-gray-400">
+              {details.length}/{DETAILS_MAX}
+            </span>
           </div>
-          <div className="relative">
+          <label className="block">
+            <span className={labelCls}>메시지를 입력해 주세요.</span>
             <textarea
-              className="w-full h-44 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] shadow-sm outline-none"
+              className={`${inputCls} h-44 resize-none`}
               placeholder="메시지를 입력해 주세요."
               value={details}
               onChange={(e) => setDetails(e.target.value.slice(0, DETAILS_MAX))}
               maxLength={DETAILS_MAX}
             />
-            <div className="absolute right-4 bottom-3 text-gray-400 text-sm">
-              {details.length}/{DETAILS_MAX}
-            </div>
-          </div>
-        </div>
+          </label>
+        </section>
 
         {/* 환경이상 / 사고 보고 */}
-        <div className="mt-6">
-          <div className="text-[15px] font-semibold text-gray-800 mb-2">
-            환경이상 / 사고 보고
+        <section className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TriangleAlert className="h-4 w-4 text-amber-600" />
+              <h2 className="text-[14px] font-semibold text-gray-800">
+                환경이상 / 사고 보고
+              </h2>
+            </div>
+            <span className="text-[12px] text-gray-400">
+              {incidentText.length}/{INCIDENT_MAX}
+            </span>
           </div>
-          <div className="relative">
+          <label className="block">
+            <span className={labelCls}>발생 내용을 상세히 입력해 주세요.</span>
             <textarea
-              className="w-full h-40 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-[15px] shadow-sm outline-none"
+              className={`${inputCls} h-44 resize-none`}
               placeholder="발생한 환경 이상 징후나 안전 사고 내용을 상세히 입력해 주세요."
               value={incidentText}
               onChange={(e) =>
@@ -229,17 +296,23 @@ export default function DiveCreateStep2Page() {
               }
               maxLength={INCIDENT_MAX}
             />
-            <div className="absolute right-4 bottom-3 text-gray-400 text-sm">
-              {incidentText.length}/{INCIDENT_MAX}
-            </div>
-          </div>
-        </div>
+          </label>
+        </section>
 
         {/* 첨부 */}
-        <div className="mt-6">
-          <div className="text-[15px] font-semibold text-gray-800 mb-2">
-            활동 사진 및 동영상
+        <section className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Images className="h-4 w-4 text-sky-600" />
+              <h2 className="text-[14px] font-semibold text-gray-800">
+                활동 사진 및 동영상
+              </h2>
+            </div>
+            <span className="text-[12px] text-gray-400">
+              {attachments.length}/10
+            </span>
           </div>
+
           <input
             ref={fileRef}
             type="file"
@@ -248,20 +321,22 @@ export default function DiveCreateStep2Page() {
             hidden
             onChange={onPickFiles}
           />
+
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="h-20 w-20 rounded-2xl bg-gray-100 flex flex-col items-center justify-center text-gray-600 shadow-sm cursor-pointer"
+              className="h-20 w-20 rounded-2xl border border-dashed border-sky-200 bg-sky-50/60 hover:bg-sky-50 text-sky-700 flex flex-col items-center justify-center shadow-sm"
             >
-              <span className="text-2xl">📷</span>
-              <span className="text-xs mt-1">{attachments.length}/10</span>
+              <Plus className="h-5 w-5" />
+              <span className="text-[11px] mt-1">추가</span>
             </button>
+
             <div className="flex flex-wrap gap-2">
               {attachments.map((f, idx) => (
                 <div
                   key={`${f.name}-${idx}`}
-                  className="relative h-20 w-20 overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm"
+                  className="relative h-20 w-20 overflow-hidden rounded-xl bg-white border border-gray-200"
                 >
                   {f.type.startsWith("image/") ? (
                     <img
@@ -286,10 +361,30 @@ export default function DiveCreateStep2Page() {
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* 하단 */}
-        <div className="mt-8 grid grid-cols-2 gap-3">
+        {/* 요약 바 */}
+        <section className={cardCls + " flex items-center justify-between"}>
+          <div className="text-[12px] text-gray-500">
+            <div>
+              첨부 파일:{" "}
+              <span className="font-medium text-gray-700">
+                {attachments.length}
+              </span>{" "}
+              개
+            </div>
+          </div>
+          {canSubmit ? (
+            <div className="inline-flex items-center gap-1 text-[12px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+              <Check className="h-3.5 w-3.5" /> 제출 가능
+            </div>
+          ) : (
+            <div className="text-[12px] text-gray-500">
+              내용/사건/첨부 중 하나 이상 입력 필요
+            </div>
+          )}
+        </section>
+        <div className="mx-auto max-w-[420px] py-3 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => {
@@ -297,20 +392,20 @@ export default function DiveCreateStep2Page() {
               console.log("draft payload:", raw ? JSON.parse(raw) : {});
               alert("임시 저장(콘솔 확인)");
             }}
-            className="h-12 rounded-2xl bg-white text-gray-800 font-semibold shadow-sm border border-gray-200"
+            className="h-12 rounded-xl bg-gray-100 text-gray-800 font-semibold hover:bg-gray-200 active:translate-y-[1px]"
           >
             임시 저장
           </button>
           <button
             type="button"
             onClick={handleSubmit}
-            className="h-12 rounded-2xl bg-[#2F80ED] text-white font-semibold shadow-md hover:brightness-105 disabled:opacity-50"
-            disabled={!details && !incidentText}
+            disabled={!canSubmit}
+            className="h-12 rounded-xl bg-[#2F80ED] text-white font-semibold  hover:brightness-105 active:translate-y-[1px] disabled:opacity-50"
           >
             제출하기
           </button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

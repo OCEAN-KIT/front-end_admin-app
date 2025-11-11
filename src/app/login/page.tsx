@@ -6,6 +6,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { ClipLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import MainHeader from "@/components/mian-header";
 
 export default function LoginPage() {
   const { checking, isLoggedIn } = useAuthGuard({ mode: "gotoHome" });
@@ -92,10 +93,11 @@ export default function LoginPage() {
       }}
     >
       <main className="flex-1 px-5 py-8 flex flex-col justify-center">
-        <div className="mb-10 flex items-center justify-center gap-3">
-          <div className="text-[32px] font-extrabold text-blue-500 ">
-            Ocean Campus
-          </div>
+        <div className="text-center">
+          <MainHeader />
+          <p className="mt-2 mb-5 text-[13px] text-gray-500">
+            바다 활동을 기록하고 제출물을 한 곳에서 관리하세요
+          </p>
         </div>
 
         {errorMsg && (

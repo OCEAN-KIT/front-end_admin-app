@@ -7,7 +7,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  // const { checking, isLoggedIn } = useAuthGuard({ mode: "gotoLogin" });
+  const { checking, isLoggedIn } = useAuthGuard({ mode: "gotoLogin" });
   const router = useRouter();
 
   return (
